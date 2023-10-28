@@ -18,29 +18,24 @@ public class TestRunner implements Runnable {
 	@Override
 	public void run() {
 		Class<?> clazz = testObj.getClass();
-		methods = clazz.getDeclaredMethods();
-		for (Method method : methods) {
-			if(method.isAnnotationPresent(Test.class)) {
-				invokeAnnotation(BeforeEach.class);
-				invokeMethod(method);
-			}
-		}
+		methods = clazz.getDeclaredMethods();		
+		invokeAnnotation(Test.class);
 	}
 
 	private void invokeAnnotation(Class<? extends Annotation> clazz) {
 		for (Method method : methods) {
 			if (method.isAnnotationPresent(clazz)) {
-				invokeMethod(method);
+				method.setAccessible(true);
+				if(clazz != BeforeEach.class) { 
+					invokeAnnotation(BeforeEach.class);
+					}
+				try {
+					method.invoke(testObj);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					System.out.println("error: " + e.getMessage());
+				}
 			}
 		}
 	}
-	
-	private void invokeMethod(Method method) {
-		method.setAccessible(true);
-		try {
-			method.invoke(testObj);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			System.out.println("error: " + e.getMessage());
-		}
-	}
+
 }
