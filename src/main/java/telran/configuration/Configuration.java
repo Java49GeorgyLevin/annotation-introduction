@@ -1,8 +1,6 @@
 package telran.configuration;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -17,34 +15,42 @@ public Configuration(Object obj) {
 	this.obj = obj;
 }
 public Configuration(Object testObj, String fileName) throws Exception {
-	obj = testObj;
-	
-	//just prototype of the HW #54 solution
- properties = new Properties();
-properties.load(new FileInputStream(fileName));
-//	String value = (String) properties.getOrDefault("any property name", "value");
-	
+	obj = testObj;	
+	properties = new Properties();
+	properties.load(new FileInputStream(fileName));	
 }
 public void configInjection() {
 	Field [] fields = obj.getClass().getDeclaredFields();
 	Arrays.stream(fields).filter(f -> f.isAnnotationPresent(Value.class)).forEach(this::injection);
 }
 void injection(Field field) {
-	Value valueAnnotation = field.getAnnotation(Value.class);
-	String value = valueAnnotation.value();
+	String value = getValue(field);
 	String convertionMethodName = getConvertionMethodName(field.getType().getSimpleName());
 	try {
 		Method method = this.getClass().getDeclaredMethod(convertionMethodName, String.class);
-		Object convertedObject = method.invoke(this, value); //TODO updating for HW #55
+		Object convertedObject = method.invoke(this, value); 
 		field.setAccessible(true);
 		setValue(field, convertedObject);
 	} catch (Exception e) {
 		throw new RuntimeException(e);
 	}
 }
+private String getValue(Field field) {
+	Value valueAnnotation = field.getAnnotation(Value.class);
+	String property = valueAnnotation.value();
+	String defaultValue = "";
+	String[] tokens = property.split(":");	
+	if(tokens.length == 2) {
+		property = tokens[0];
+		defaultValue = tokens[1];		
+	}
+	String value =  properties.getProperty(property, defaultValue);
+	
+	return value;
+}
 private void setValue(Field field, Object convertedObject) throws IllegalAccessException {
 	field.set(obj, convertedObject);
-	//TODO HW #55
+
 }
 private String getConvertionMethodName(String type) {
 	

@@ -29,7 +29,9 @@ public class TestRunner implements Runnable {
 
 	private Method[] getBeforeEachMethods(Method[] methods) {
 		
-		return Arrays.stream(methods).filter(m -> m.isAnnotationPresent(BeforeEach.class)).toArray(Method[]::new);
+		return Arrays.stream(methods)
+				.filter(m -> m.isAnnotationPresent(BeforeEach.class))
+				.toArray(Method[]::new);
 	}
 
 	private void runTestMethods(Method[] methods, Method[] beforeEachMethods) {
